@@ -681,45 +681,44 @@ tailwind.config = {
 
     <!-- Overview -->
     <section id="view-overview" class="view p-4 lg:p-6 space-y-4">
-      <!-- KPI Row -->
       <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
         <div class="bg-white rounded-[20px] border border-sand pastel-shadow p-4">
           <div class="flex justify-between items-start">
             <p class="text-[11px] font-bold tracking-widest text-muted">PREDICTED RISK SCORE</p>
-            <span class="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-full">MODEL • 6h HORIZON</span>
+            <span id="riskBadge" class="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-full">MODEL • 6h HORIZON</span>
           </div>
           <div class="flex items-end gap-2 mt-3">
-            <span class="text-3xl font-display font-bold">64</span><span class="text-muted text-sm mb-1">/100</span>
-            <span class="ml-auto text-xs font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full">Moderate</span>
+            <span id="riskScore" class="text-3xl font-display font-bold">64</span><span class="text-muted text-sm mb-1">/100</span>
+            <span id="riskLevel" class="ml-auto text-xs font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full">Moderate</span>
           </div>
-          <div class="w-full h-1.5 bg-cream rounded-full mt-3 overflow-hidden"><div class="h-full w-[64%] bg-gradient-to-r from-amber-300 to-orange-400 rounded-full"></div></div>
-          <p class="text-[11px] text-muted mt-2">↑ 12 pts vs yesterday • Driven by accumulated rainfall</p>
+          <div class="w-full h-1.5 bg-cream rounded-full mt-3 overflow-hidden"><div id="riskBar" class="h-full w-[64%] bg-gradient-to-r from-amber-300 to-orange-400 rounded-full"></div></div>
+          <p id="riskNote" class="text-[11px] text-muted mt-2">↑ 12 pts vs yesterday • Driven by accumulated rainfall</p>
         </div>
 
         <div class="bg-white rounded-[20px] border border-sand pastel-shadow p-4">
           <div class="flex justify-between items-start">
             <p class="text-[11px] font-bold tracking-widest text-muted">CURRENT RAINFALL</p>
-            <span class="text-[10px] font-bold bg-mistBlue text-white px-2 py-1 rounded-full">OBSERVED (SAMPLE)</span>
+            <span id="rainBadge" class="text-[10px] font-bold bg-mistBlue text-white px-2 py-1 rounded-full">OBSERVED (SAMPLE)</span>
           </div>
           <div class="flex items-end gap-2 mt-3">
-            <span class="text-3xl font-display font-bold">18.4</span><span class="text-sm mb-1 font-medium">mm/hr</span>
-            <span class="ml-auto text-xs font-bold bg-[#E0ECFF] text-[#4A6FA5] px-2.5 py-1 rounded-full">Heavy</span>
+            <span id="rainValue" class="text-3xl font-display font-bold">18.4</span><span class="text-sm mb-1 font-medium">mm/hr</span>
+            <span id="rainClass" class="ml-auto text-xs font-bold bg-[#E0ECFF] text-[#4A6FA5] px-2.5 py-1 rounded-full">Heavy</span>
           </div>
-          <p class="text-xs font-medium mt-2 flex items-center gap-1"><i data-lucide="droplets" class="w-3.5 h-3.5 text-mistBlue"></i> Accum. 24h: 47.2 mm • Probability 78%</p>
-          <p class="text-[11px] text-muted">Sukhliya • Open-Meteo sample</p>
+          <p id="rainDetails" class="text-xs font-medium mt-2 flex items-center gap-1"><i data-lucide="droplets" class="w-3.5 h-3.5 text-mistBlue"></i> Accum. 24h: 47.2 mm • Probability 78%</p>
+          <p id="rainSource" class="text-[11px] text-muted">Sukhliya • Open-Meteo sample</p>
         </div>
 
         <div class="bg-white rounded-[20px] border border-sand pastel-shadow p-4">
           <div class="flex justify-between items-start">
             <p class="text-[11px] font-bold tracking-widest text-muted">WATER LEVEL</p>
-            <span class="text-[10px] font-bold bg-sage text-white px-2 py-1 rounded-full">KHAN RIVER</span>
+            <span id="waterBadge" class="text-[10px] font-bold bg-sage text-white px-2 py-1 rounded-full">KHAN RIVER</span>
           </div>
           <div class="flex items-end gap-2 mt-3">
-            <span class="text-3xl font-display font-bold">3.2</span><span class="text-sm mb-1 font-medium">m</span>
-            <span class="ml-auto text-xs font-bold bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">Normal</span>
+            <span id="waterValue" class="text-3xl font-display font-bold">3.2</span><span class="text-sm mb-1 font-medium">m</span>
+            <span id="waterStatus" class="ml-auto text-xs font-bold bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">Normal</span>
           </div>
-          <div class="w-full h-1.5 bg-cream rounded-full mt-3 overflow-hidden"><div class="h-full w-[48%] bg-sage rounded-full"></div></div>
-          <p class="text-[11px] text-muted mt-2">Danger mark 5.0 m • Sensor KR-04 • 10 min ago</p>
+          <div class="w-full h-1.5 bg-cream rounded-full mt-3 overflow-hidden"><div id="waterBar" class="h-full w-[48%] bg-sage rounded-full"></div></div>
+          <p id="waterDetails" class="text-[11px] text-muted mt-2">Danger mark 5.0 m • Sensor KR-04 • 10 min ago</p>
         </div>
 
         <div class="bg-white rounded-[20px] border border-sand pastel-shadow p-4">
@@ -728,7 +727,7 @@ tailwind.config = {
             <span class="text-[10px] font-bold bg-roseDust text-white px-2 py-1 rounded-full">3 ACTIVE</span>
           </div>
           <div class="flex items-end gap-2 mt-3">
-            <span class="text-3xl font-display font-bold">03</span>
+            <span id="alertCount" class="text-3xl font-display font-bold">03</span>
             <span class="ml-auto text-xs font-bold bg-roseDust text-white px-2.5 py-1 rounded-full">1 Critical</span>
           </div>
           <p class="text-xs font-medium mt-2">Latest: Bypass Road waterlogging — 14 min ago</p>
@@ -1212,8 +1211,38 @@ tailwind.config = {
 
 <script>
 /* =====================================================================
-   ABHEDYA VARAH — authentication + existing dashboard initialisation
+   ABHEDYA VARAH — authentication + API integration
    ===================================================================== */
+
+const API_BASE_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+  ? 'http://127.0.0.1:8000'
+  : 'https://abhedya-varah.onrender.com';
+
+let currentUser = null;
+let accessToken = localStorage.getItem('abhedya_token');
+
+async function apiFetch(endpoint, options = {}) {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+    ...options.headers
+  };
+
+  try {
+    const response = await fetch(url, { ...options, headers });
+    if (response.status === 401 && accessToken) {
+      logout();
+      throw new Error('Session expired');
+    }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'API request failed');
+    return data;
+  } catch (error) {
+    console.error(`API Error (${endpoint}):`, error);
+    throw error;
+  }
+}
 
 /* ---------- 1. Ambient rainfall on the login panel ---------- */
 (function buildRain() {
@@ -1327,7 +1356,7 @@ document.getElementById('fillDemo').addEventListener('click', () => {
 });
 
 /* sign in */
-loginForm.addEventListener('submit', (e) => {
+loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   let valid = true;
 
@@ -1358,13 +1387,37 @@ loginForm.addEventListener('submit', (e) => {
   signInLabel.textContent = 'Verifying credentials…';
   signInIcon.outerHTML = '<span class="spinner" id="signInIcon"></span>';
 
-  setTimeout(() => {
+  try {
+    const res = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+    accessToken = res.access_token;
+    currentUser = res.user;
+    localStorage.setItem('abhedya_token', accessToken);
+
     if (rememberMe.checked) safeSet('abhedya_email', email);
     else safeDel('abhedya_email');
 
     signInLabel.textContent = 'Access granted';
     setTimeout(enterDashboard, 380);
-  }, 900);
+  } catch (err) {
+    if (email === 'ops@abhedya.gov.in' && password === 'abhedya2025') {
+      console.warn('Backend unavailable, proceeding in demo mode');
+      if (rememberMe.checked) safeSet('abhedya_email', email);
+      else safeDel('abhedya_email');
+      signInLabel.textContent = 'Access granted (Demo)';
+      setTimeout(enterDashboard, 380);
+    } else {
+      setError(passwordField, passwordError, err.message || 'Incorrect email or password.');
+      signInBtn.disabled = false;
+      signInBtn.style.opacity = '1';
+      signInLabel.textContent = 'Sign In';
+      const ic = document.getElementById('signInIcon');
+      if (ic) ic.outerHTML = '<i data-lucide="arrow-right" class="w-4 h-4" id="signInIcon"></i>';
+      renderIcons();
+    }
+  }
 });
 
 /* password reset flow */
@@ -1744,12 +1797,110 @@ function initCharts() {
   });
 }
 
-function initDashboard() {
+async function initDashboard() {
   if (dashboardReady) return;
   dashboardReady = true;
   try { initMainMap(); } catch (e) {}
   try { initCharts(); } catch (e) {}
   renderIcons();
+
+  // Load all dashboard data
+  try {
+    const [summary, infra, alertsRes] = await Promise.all([
+      apiFetch('/api/dashboard/summary'),
+      apiFetch('/api/infrastructure'),
+      apiFetch('/api/alerts')
+    ]);
+
+    // 1. Update Summary KPIs
+    if (summary) {
+      if (summary.predicted_risk) {
+        const rScore = document.getElementById('riskScore');
+        const rLevel = document.getElementById('riskLevel');
+        const rBar = document.getElementById('riskBar');
+        if (rScore) rScore.textContent = summary.predicted_risk.score;
+        if (rLevel) rLevel.textContent = summary.predicted_risk.level;
+        if (rBar) rBar.style.width = `${summary.predicted_risk.score}%`;
+      }
+      if (summary.rainfall) {
+        const rVal = document.getElementById('rainValue');
+        const rClass = document.getElementById('rainClass');
+        const rBadge = document.getElementById('rainBadge');
+        if (rVal) rVal.textContent = summary.rainfall.value;
+        if (rClass) rClass.textContent = summary.rainfall.classification;
+        if (rBadge && summary.weather_live) {
+          rBadge.textContent = 'OBSERVED (LIVE)';
+          rBadge.className = 'text-[10px] font-bold bg-emerald-500 text-white px-2 py-1 rounded-full';
+        }
+      }
+      if (summary.water_level) {
+        const wVal = document.getElementById('waterValue');
+        const wStatus = document.getElementById('waterStatus');
+        const wBadge = document.getElementById('waterBadge');
+        if (wVal) wVal.textContent = summary.water_level.value;
+        if (wStatus) wStatus.textContent = summary.water_level.status;
+        if (wBadge && summary.water_level_live) {
+          wBadge.textContent = 'KHAN RIVER (LIVE)';
+          wBadge.className = 'text-[10px] font-bold bg-emerald-500 text-white px-2 py-1 rounded-full';
+        }
+      }
+      if (summary.active_alerts !== undefined) {
+        const aCount = document.getElementById('alertCount');
+        if (aCount) aCount.textContent = String(summary.active_alerts).padStart(2, '0');
+      }
+    }
+
+    // 2. Update Infrastructure
+    if (infra && infra.assets) {
+      const grid = document.getElementById('infraGrid');
+      if (grid) {
+        grid.innerHTML = infra.assets.map(i => `
+          <div class="bg-white rounded-[20px] border border-sand pastel-shadow p-4">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-xl bg-cream border border-sand flex items-center justify-center">${i.asset_type === 'pump_station' ? '⚡' : i.asset_type === 'bridge' ? '🌉' : '🕳️'}</span>
+              <div class="flex-1">
+                <p class="text-sm font-bold">${i.name}</p>
+                <p class="text-xs text-muted">${i.location}</p>
+              </div>
+              <span class="text-[11px] font-bold bg-cream border border-sand px-2 py-1 rounded-full">${i.risk || i.risk_level}</span>
+            </div>
+            <div class="flex items-center justify-between mt-3">
+              <span class="text-xs font-semibold">Status: <span class="px-2 py-1 rounded-full bg-[#2E2E2E] text-white text-[11px]">${i.status}</span></span>
+              <button class="text-xs font-bold text-mistBlue" onclick="alert('Simulation: Details for ${i.id}')">Details →</button>
+            </div>
+          </div>`).join('');
+      }
+    }
+
+    // 3. Update Alerts
+    if (alertsRes && alertsRes.items) {
+      const alertContainer = document.querySelector('#view-alerts .lg\\:col-span-2');
+      if (alertContainer) {
+        // Keep the first static critical alert for demo if needed, or replace all
+        // Let's just update the dynamic part if we had one, but we'll prepend new alerts
+        const alertsHtml = alertsRes.items.map(a => `
+          <div class="bg-white border border-sand rounded-[20px] p-4 flex gap-3 mb-3">
+            <span class="w-10 h-10 rounded-full ${a.severity === 'Critical' ? 'bg-roseDust text-white' : 'bg-amber-300'} flex items-center justify-center font-bold">${a.severity === 'Critical' ? '!' : '•'}</span>
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h4 class="font-bold text-sm">${a.severity} — ${a.title}</h4>
+                <span class="text-[10px] font-bold ${a.status === 'Active' ? 'bg-roseDust text-white' : 'bg-sand'} px-2 py-1 rounded-full">${a.status.toUpperCase()}</span>
+                <span class="ml-auto text-[11px] text-muted">${new Date(a.created_at).toLocaleString()}</span>
+              </div>
+              <p class="text-xs text-muted mt-1">${a.description}</p>
+              <p class="text-xs font-semibold mt-2">Location: ${a.location}</p>
+            </div>
+          </div>
+        `).join('');
+        // For simplicity in this demo, we replace the alert list
+        const alertListHeader = '<h4 class="font-semibold text-sm mb-3">System Alerts</h4>';
+        alertContainer.innerHTML = alertListHeader + alertsHtml;
+      }
+    }
+
+  } catch (err) {
+    console.warn('Dashboard partially loaded with errors:', err);
+  }
 }
 
 /* keep the login screen first; dashboard stays mounted but hidden */
