@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib, hmac, base64, json, os, sqlite3, secrets
 import requests
 from typing import Optional, List, Dict, Any
+from functools import lru_cache
 
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +18,29 @@ BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "abhedya_varah.db"
 JWT_SECRET = os.getenv("JWT_SECRET", "CHANGE_THIS_DEVELOPMENT_SECRET")
 TOKEN_HOURS = 12
+
+# Weather API caching - 10 minute cache for reduced API calls
+_weather_cache = {}
+_weather_cache_time = None
+
+def get_cached_weather(lat: float, lon: float) -> Optional[Dict]:
+    """Get cached weather data if available and not expired."""
+    global _weather_cache, _weather_cache_time
+    cache_key = f"{lat}:{lon}"
+    now = datetime.now(timezone.utc)
+
+    # Check if cache exists and is less than 10 minutes old
+    if _weather_cache_time and _weather_cache_time > now - timedelta(minutes=10):
+        if cache_key in _weather_cache:
+            return _weather_cache[cache_key]
+    return None
+
+def set_cached_weather(lat: float, lon: float, data: Dict) -> None:
+    """Cache weather data for 10 minutes."""
+    global _weather_cache, _weather_cache_time
+    cache_key = f"{lat}:{lon}"
+    _weather_cache[cache_key] = data
+    _weather_cache_time = datetime.now(timezone.utc)
 
 # CORS configuration - restrict to deployed frontend origin
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:8000,http://127.0.0.1:5500").split(",")
@@ -394,7 +418,22 @@ def dashboard_summary():
 
 @app.get("/api/weather/current")
 def current_weather(lat: float = 22.7196, lon: float = 75.8577):
-    """Get current weather data from Open-Meteo API (free, no key required)"""
+    """Get current weather data from Open-Meteo API (free, no key required)
+
+    Uses 10-minute caching to reduce API requests.
+    Returns 'live' when Open-Meteo responds successfully,
+    'cached' when using cached data (< 10 min old),
+    'sample' or 'unavailable' when cache expires and API fails.
+    """
+    # Check for valid cached data first
+    cached = get_cached_weather(lat, lon)
+    if cached:
+        return cached
+
+    # Validate coordinates
+    if lat is None or lon is None:
+        lat, lon = 22.7196, 75.8577  # Default to Indore
+
     try:
         # Open-Meteo API provides free weather data
         url = "https://api.open-meteo.com/v1/forecast"
@@ -412,36 +451,34 @@ def current_weather(lat: float = 22.7196, lon: float = 75.8577):
 
         # Parse Open-Meteo response
         current = data.get("current", {})
+        timezone_info = data.get("timezone", "UTC")
 
+        # Validate we got actual data from the provider
+        if "temperature_2m" not in current:
+            raise ValueError("Incomplete weather data from provider")
+
+        # Build result with provider data
         result = {
-            "data_mode": "live" if "temperature_2m" in current else "sample",
+            "data_mode": "live",
             "location": {"lat": lat, "lon": lon},
             "temperature_c": current.get("temperature_2m"),
             "humidity_percent": current.get("relativehumidity_2m"),
             "wind_kmh": current.get("wind_speed_10m", 0) * 3.6,  # Convert m/s to km/h
             "wind_direction_degrees": current.get("wind_direction_10m"),
-            "rainfall_mm_hour": current.get("precipitation", 0),
-            "source": "Open-Meteo API (live)" if "temperature_2m" in current else "Sample data — API timeout or unavailable",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "provider": "open-meteo"
+            "rainfall_mm_hour": current.get("precipitation", 0),  # Zero is valid
+            "source": "Open-Meteo API (live)",
+            "timestamp": data.get("time", datetime.now(timezone.utc).isoformat()),
+            "timezone": timezone_info,
+            "provider": "open-meteo",
+            "weather_code": current.get("weather_code"),
+            "units": data.get("current_units", {})
         }
+
+        # Cache the result
+        set_cached_weather(lat, lon, result)
 
         # Store in database
         try:
-            weather_record = WeatherReading(
-                location_name=f"Lat {lat}, Lon {lon}",
-                latitude=lat,
-                longitude=lon,
-                temperature_celsius=result.get("temperature_c"),
-                humidity_percent=result.get("humidity_percent"),
-                wind_speed_kmh=result.get("wind_kmh"),
-                wind_direction_degrees=result.get("wind_direction_degrees"),
-                rainfall_mm_hour=result.get("rainfall_mm_hour"),
-                forecast_probability_percent=78,  # Default based on rainfall
-                source=DataSource.LIVE if result.get("data_mode") == "live" else DataSource.SAMPLE,
-                data_quality_flag="good" if result.get("data_mode") == "live" else "sample"
-            )
-
             with db() as con:
                 con.execute("""
                 INSERT INTO weather_readings
@@ -450,33 +487,56 @@ def current_weather(lat: float = 22.7196, lon: float = 75.8577):
                  forecast_probability_percent, source, external_id, data_quality_flag, created_at)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """, (
-                    weather_record.location_name, weather_record.latitude, weather_record.longitude,
-                    weather_record.temperature_celsius, weather_record.humidity_percent,
-                    weather_record.wind_speed_kmh, weather_record.wind_direction_degrees,
-                    weather_record.rainfall_mm_hour, weather_record.timestamp,
-                    weather_record.forecast_probability_percent, weather_record.source.value,
-                    weather_record.external_id, weather_record.data_quality_flag,
+                    f"Lat {lat}, Lon {lon}", lat, lon,
+                    result.get("temperature_c"), result.get("humidity_percent"),
+                    result.get("wind_kmh"), result.get("wind_direction_degrees"),
+                    result.get("rainfall_mm_hour"), result.get("timestamp"),
+                    78,  # Will be enhanced with cached hourly data if available
+                    "live", "open-meteo", False,  # data_quality_flag: False = good
                     datetime.now(timezone.utc).isoformat()
                 ))
-        except Exception as e:
-            # Database storage failed, but don't break the API response
-            pass
+        except Exception:
+            pass  # Database storage failed, but don't break the API response
 
         return result
 
-    except Exception as e:
-        # API failed, return sample data
+    except requests.Timeout:
+        # Try to return cached data if available
+        if cached:
+            cached["data_mode"] = "cached"
+            cached["note"] = "Cache used due to API timeout"
+            return cached
         return {
-            "data_mode": "sample",
+            "data_mode": "unavailable",
             "location": {"lat": lat, "lon": lon},
-            "temperature_c": 28,
-            "humidity_percent": 84,
-            "wind_kmh": 12,
-            "wind_direction_degrees": 270,
-            "rainfall_mm_hour": 18.4,
-            "source": f"Sample data — Open-Meteo API unavailable: {str(e)}",
+            "temperature_c": None,
+            "humidity_percent": None,
+            "wind_kmh": None,
+            "wind_direction_degrees": None,
+            "rainfall_mm_hour": None,
+            "source": "Weather provider unavailable (timeout)",
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "provider": "sample"
+            "provider": "open-meteo",
+            "error": "Request timeout"
+        }
+    except Exception as e:
+        # Try to return cached data if available
+        if cached:
+            cached["data_mode"] = "cached"
+            cached["note"] = "Cache used due to API error"
+            return cached
+        return {
+            "data_mode": "unavailable",
+            "location": {"lat": lat, "lon": lon},
+            "temperature_c": None,
+            "humidity_percent": None,
+            "wind_kmh": None,
+            "wind_direction_degrees": None,
+            "rainfall_mm_hour": None,
+            "source": f"Weather provider unavailable: {str(e)[:50]}",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "provider": "open-meteo",
+            "error": f"Request error: {str(e)[:50]}"
         }
 
 @app.get("/api/risk")

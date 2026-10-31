@@ -80,12 +80,46 @@ class TestWeather:
         assert "location" in data
         assert "temperature_c" in data
         assert "rainfall_mm_hour" in data
+        # Verify data_mode indicates valid response
+        assert data.get("data_mode") in ["live", "cached"]
 
     def test_weather_sample_fallback(self):
         response = client.get("/api/weather/current?lat=999&lon=999")
         assert response.status_code == 200
         data = response.json()
         assert "data_mode" in data
+        # Out-of-range coordinates may return unavailable or cached
+
+    def test_weather_zero_rainfall(self):
+        """Test that zero rainfall is handled correctly (not treated as missing)"""
+        # Request at a location where precipitation might be 0
+        response = client.get("/api/weather/current?lat=30.0&lon=-90.0")
+        assert response.status_code == 200
+        data = response.json()
+        # rainfall_mm_hour can be 0.0 (valid value)
+        if data.get("data_mode") == "live":
+            assert "rainfall_mm_hour" in data
+            assert isinstance(data["rainfall_mm_hour"], (int, float))
+
+    def test_weather_default_coordinates(self):
+        """Test weather endpoint with default coordinates when none provided"""
+        response = client.get("/api/weather/current")
+        assert response.status_code == 200
+        data = response.json()
+        assert data.get("location", {}).get("lat") == 22.7196
+        assert data.get("location", {}).get("lon") == 75.8577
+
+    def test_weather_includes_provider_metadata(self):
+        """Test that weather response includes proper provider metadata"""
+        response = client.get("/api/weather/current?lat=22.7196&lon=75.8577")
+        assert response.status_code == 200
+        data = response.json()
+        # Should have provider info when live
+        if data.get("data_mode") == "live":
+            assert "provider" in data
+            assert data["provider"] == "open-meteo"
+            assert "timestamp" in data
+            assert "timezone" in data
 
 class TestRisk:
     def test_risk_prediction(self):
