@@ -701,8 +701,8 @@ tailwind.config = {
             <span id="rainBadge" class="text-[10px] font-bold bg-mistBlue text-white px-2 py-1 rounded-full">OBSERVED (SAMPLE)</span>
           </div>
           <div class="flex items-end gap-2 mt-3">
-            <span id="rainValue" class="text-3xl font-display font-bold">18.4</span><span class="text-sm mb-1 font-medium">mm/hr</span>
-            <span id="rainClass" class="ml-auto text-xs font-bold bg-[#E0ECFF] text-[#4A6FA5] px-2.5 py-1 rounded-full">Heavy</span>
+            <span id="rainValue" class="text-3xl font-display font-bold">—</span><span class="text-sm mb-1 font-medium">mm/hr</span>
+            <span id="rainClass" class="ml-auto text-xs font-bold bg-[#E0ECFF] text-[#4A6FA5] px-2.5 py-1 rounded-full">Loading</span>
           </div>
           <p id="rainDetails" class="text-xs font-medium mt-2 flex items-center gap-1"><i data-lucide="droplets" class="w-3.5 h-3.5 text-mistBlue"></i> Accum. 24h: 47.2 mm • Probability 78%</p>
           <p id="rainSource" class="text-[11px] text-muted">Sukhliya • Open-Meteo sample</p>
@@ -1241,6 +1241,20 @@ async function apiFetch(endpoint, options = {}) {
   } catch (error) {
     console.error(`API Error (${endpoint}):`, error);
     throw error;
+  }
+}
+
+async function fetchCurrentWeather() {
+  try {
+    const weather = await apiFetch(
+      '/api/weather/current?lat=22.7196&lon=75.8577'
+    );
+
+    console.log('Current weather from backend:', weather);
+    return weather;
+  } catch (error) {
+    console.error('Could not load current weather:', error);
+    return null;
   }
 }
 
@@ -1826,11 +1840,33 @@ async function initDashboard() {
         const rVal = document.getElementById('rainValue');
         const rClass = document.getElementById('rainClass');
         const rBadge = document.getElementById('rainBadge');
-        if (rVal) rVal.textContent = summary.rainfall.value;
-        if (rClass) rClass.textContent = summary.rainfall.classification;
-        if (rBadge && summary.weather_live) {
-          rBadge.textContent = 'OBSERVED (LIVE)';
-          rBadge.className = 'text-[10px] font-bold bg-emerald-500 text-white px-2 py-1 rounded-full';
+        const rSource = document.getElementById('rainSource');
+        const rDetails = document.getElementById('rainDetails');
+
+        // Rainfall value: 0 is a valid value, not missing data
+        if (rVal) {
+          const val = summary.rainfall.value;
+          rVal.textContent = (val === null || val === undefined) ? '—' : val;
+        }
+        if (rClass) rClass.textContent = summary.rainfall.classification || 'Loading';
+        if (rSource) rSource.textContent = summary.rainfall.source || 'Sukhliya • Open-Meteo';
+
+        // Update badge based on data mode
+        if (rBadge) {
+          const dataMode = summary.data_mode || (summary.weather_live ? 'live' : 'sample');
+          if (dataMode === 'live') {
+            rBadge.textContent = 'OBSERVED (LIVE)';
+            rBadge.className = 'text-[10px] font-bold bg-emerald-500 text-white px-2 py-1 rounded-full';
+          } else if (dataMode === 'cached') {
+            rBadge.textContent = 'OBSERVED (CACHED)';
+            rBadge.className = 'text-[10px] font-bold bg-amber-400 text-white px-2 py-1 rounded-full';
+          } else if (dataMode === 'unavailable') {
+            rBadge.textContent = 'DATA UNAVAILABLE';
+            rBadge.className = 'text-[10px] font-bold bg-rose-400 text-white px-2 py-1 rounded-full';
+          } else {
+            rBadge.textContent = 'OBSERVED (SAMPLE)';
+            rBadge.className = 'text-[10px] font-bold bg-mistBlue text-white px-2 py-1 rounded-full';
+          }
         }
       }
       if (summary.water_level) {
@@ -1876,8 +1912,6 @@ async function initDashboard() {
     if (alertsRes && alertsRes.items) {
       const alertContainer = document.querySelector('#view-alerts .lg\\:col-span-2');
       if (alertContainer) {
-        // Keep the first static critical alert for demo if needed, or replace all
-        // Let's just update the dynamic part if we had one, but we'll prepend new alerts
         const alertsHtml = alertsRes.items.map(a => `
           <div class="bg-white border border-sand rounded-[20px] p-4 flex gap-3 mb-3">
             <span class="w-10 h-10 rounded-full ${a.severity === 'Critical' ? 'bg-roseDust text-white' : 'bg-amber-300'} flex items-center justify-center font-bold">${a.severity === 'Critical' ? '!' : '•'}</span>
@@ -1892,7 +1926,6 @@ async function initDashboard() {
             </div>
           </div>
         `).join('');
-        // For simplicity in this demo, we replace the alert list
         const alertListHeader = '<h4 class="font-semibold text-sm mb-3">System Alerts</h4>';
         alertContainer.innerHTML = alertListHeader + alertsHtml;
       }
@@ -1909,6 +1942,7 @@ window.addEventListener('resize', () => {
   if (liveMap) liveMap.invalidateSize();
   if (infraMap) infraMap.invalidateSize();
 });
+fetchCurrentWeather();
 </script>
 </body>
 </html>
