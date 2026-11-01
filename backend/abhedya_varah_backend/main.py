@@ -9,10 +9,7 @@ from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field, validator
 
-from .models import (
-    WeatherReading, WaterLevelReading, RiskPrediction,
-    InfrastructureAsset, DataSource
-)
+
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "abhedya_varah.db"
