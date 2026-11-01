@@ -40,8 +40,13 @@ def set_cached_weather(lat: float, lon: float, data: Dict) -> None:
     _weather_cache_time = datetime.now(timezone.utc)
 
 # CORS configuration - restrict to deployed frontend origin
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:8000,http://127.0.0.1:5500").split(",")
-
+CORS_ORIGINS = [
+    "https://imaginative-kulfi-ce1cc9.netlify.app",
+    "https://abhedya-varah.onrender.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:5500",
+    "http://localhost:5173",
+]
 app = FastAPI(title="ABHEDYA VARAH API", version="0.1.0")
 
 # CORS configuration - restrict to deployed frontend origin
